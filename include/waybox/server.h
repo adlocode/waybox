@@ -20,6 +20,7 @@
 #include <wlr/types/wlr_subcompositor.h>
 #include <wlr/types/wlr_xdg_output_v1.h>
 #include <wlr/types/wlr_xdg_shell.h>
+#include <wlr/xwayland.h>
 #include <wlr/util/log.h>
 
 #ifdef USE_NLS
@@ -64,10 +65,13 @@ struct wb_server {
 
 	struct wlr_layer_shell_v1 *layer_shell;
 	struct wlr_xdg_shell *xdg_shell;
+	struct wlr_xwayland *xwayland;
 
 	struct wl_listener new_layer_surface;
 	struct wl_listener new_xdg_surface;
 	struct wl_listener new_xdg_decoration;
+	
+	struct wl_listener new_xwayland_surface;
 
 	struct wl_listener new_input;
 	struct wl_listener new_output;

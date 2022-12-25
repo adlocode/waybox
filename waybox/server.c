@@ -1,5 +1,6 @@
 #include "waybox/server.h"
 #include "waybox/xdg_shell.h"
+#include "waybox/xwayland.h"
 
 bool wb_create_backend(struct wb_server* server) {
 	/* The Wayland display is managed by libwayland. It handles accepting
@@ -107,6 +108,8 @@ bool wb_start_server(struct wb_server* server) {
 	 * https://drewdevault.com/2018/07/29/Wayland-shells.html
 	 */
 	init_xdg_shell(server);
+	
+	init_xwayland (server);
 
 	return true;
 }

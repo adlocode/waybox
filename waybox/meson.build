@@ -8,6 +8,7 @@ wb_src = files(
   'seat.c',
   'server.c',
   'xdg_shell.c',
+  'xwayland.c',
   )
 
 wb_dep = [

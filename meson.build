@@ -13,6 +13,7 @@ project(
 
 add_project_arguments(
   '-Wno-unused-parameter',
+  '-Wno-unused-variable',
   '-D_DEFAULT_SOURCE',
   '-D_POSIX_C_SOURCE=200112L',
   '-DWLR_USE_UNSTABLE',
