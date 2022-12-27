@@ -30,14 +30,17 @@ struct wb_view *get_view_at(
 
 void focus_view(struct wb_view *view, struct wlr_surface *surface) {
 	/* Note: this function only deals with keyboard focus. */
-	if (view == NULL || surface == NULL || !wlr_surface_is_xdg_surface(surface)) {
+	if (view == NULL || surface == NULL || !(wlr_surface_is_xdg_surface(surface)||
+		wlr_surface_is_xwayland_surface(surface))) {
 		return;
 	}
 
-	struct wlr_xdg_surface *xdg_surface = wlr_xdg_surface_from_wlr_surface(surface);
-	if (xdg_surface)
-		wlr_log(WLR_INFO, "%s: %s", _("Keyboard focus is now on surface"),
+	if (wlr_surface_is_xdg_surface(surface)) {
+		struct wlr_xdg_surface *xdg_surface = wlr_xdg_surface_from_wlr_surface(surface);
+		if (xdg_surface)
+			wlr_log(WLR_INFO, "%s: %s", _("Keyboard focus is now on surface"),
 				xdg_surface->toplevel->app_id);
+	}
 
 	struct wb_server *server = view->server;
 	struct wlr_seat *seat = server->seat->seat;
@@ -56,20 +59,31 @@ void focus_view(struct wb_view *view, struct wlr_surface *surface) {
 			wlr_xdg_surface_from_wlr_surface(prev_surface);
 		wlr_xdg_toplevel_set_activated(previous->toplevel, false);
 	}
+	else if (prev_surface && wlr_surface_is_xwayland_surface(prev_surface)) {
+		struct wlr_xwayland_surface *previous =
+			wlr_xwayland_surface_from_wlr_surface(prev_surface);
+		wlr_xwayland_surface_activate(previous, false);
+	}
 	/* Move the view to the front */
 	if (!server->seat->focused_layer) {
 		wlr_scene_node_raise_to_top(&view->scene_tree->node);
 	}
 	wl_list_remove(&view->link);
 	wl_list_insert(&server->views, &view->link);
-	/* Activate the new surface */
-	wlr_xdg_toplevel_set_activated(view->xdg_toplevel, true);
-	/*
-	 * Tell the seat to have the keyboard enter this surface. wlroots will keep
-	 * track of this and automatically send key events to the appropriate
-	 * clients without additional work on your part.
-	 */
-	seat_focus_surface(server->seat, view->xdg_toplevel->base->surface);
+	if (wlr_surface_is_xdg_surface(surface)) {
+		/* Activate the new surface */
+		wlr_xdg_toplevel_set_activated(view->xdg_toplevel, true);
+		/*
+		 * Tell the seat to have the keyboard enter this surface. wlroots will keep
+		 * track of this and automatically send key events to the appropriate
+		 * clients without additional work on your part.
+		 */
+		seat_focus_surface(server->seat, view->xdg_toplevel->base->surface);
+	}
+	else if (wlr_surface_is_xwayland_surface(surface)) {
+		wlr_xwayland_surface_activate(view->xwayland_surface, true);
+		seat_focus_surface(server->seat, view->xwayland_surface->surface);
+	}
 }
 
 struct wlr_output *get_active_output(struct wb_view *view) {
